@@ -6,11 +6,13 @@ on:
     paths:
       - "snake/**"
       - ".github/workflows/pygbag.yml"
+      - "README.md"
   pull_request:
     branches: [main]
     paths:
       - "snake/**"
       - ".github/workflows/pygbag.yml"
+      - "README.md"
   workflow_dispatch:
 
 jobs:
@@ -35,10 +37,16 @@ jobs:
       - name: Setup Pages
         uses: actions/configure-pages@v3
 
+      - name: Prepare deployment
+        run: |
+          mkdir -p ./deploy
+          cp README.md ./deploy/
+          mv ${{ env.GAME }}/build/web ./deploy/${{ env.GAME }}
+
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v1
         with:
-          path: "${{ env.GAME }}/build/web"
+          path: "./deploy"
 
       - name: Deploy to GitHub Pages
         id: deployment
