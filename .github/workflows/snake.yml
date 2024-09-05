@@ -1,33 +1,43 @@
-name: snake
+name: Build and Deploy Snake Game
+
 on:
   push:
     branches: [main]
     paths:
-      - "*.py"
+      - "snake/*.py"
       - ".github/workflows/pygbag.yml"
   pull_request:
     branches: [main]
     paths:
-      - "*.py"
+      - "snake/*.py"
       - ".github/workflows/pygbag.yml"
   workflow_dispatch:
 
 jobs:
-  build-pygbag:
+  build-and-deploy:
     env:
       GAME: snake
-    name: Build for Emscripten pygbag runtime
+    name: Build and Deploy for Emscripten pygbag runtime
     runs-on: ubuntu-latest
 
     steps:
       - uses: actions/checkout@v2
-      - name: Checkout
+
+      - name: Build
         run: |
           python -m pip install pygbag
           python -m pygbag --build $GITHUB_WORKSPACE/${{ env.GAME }}/main.py
-      - name: "Upload to GitHub pages branch gh-pages"
-        uses: JamesIves/github-pages-deploy-action@4.1.7
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v3
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v1
         with:
-          branch: gh-pages
-          folder: ${{ env.GAME }}/build/web
-          target-folder: ${{ env.GAME }}
+          path: "${{ env.GAME }}/build/web"
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v2
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
