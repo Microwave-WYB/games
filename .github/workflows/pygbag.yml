@@ -28,8 +28,6 @@ jobs:
     strategy:
       matrix:
         game_folder: ${{ fromJson(needs.find-games.outputs.game_folders) }}
-    env:
-      GAME_NAME: ${{ matrix.game_folder }}
     steps:
       - uses: actions/checkout@v2
       - name: Set up Python
@@ -38,8 +36,13 @@ jobs:
           python-version: "3.x"
       - name: Install pygbag
         run: pip install pygbag
-      - name: Build ${{ env.GAME_NAME }}
-        run: python -m pygbag --build $GITHUB_WORKSPACE/${{ env.GAME_NAME }}/main.py
+      - name: Set game name
+        id: set-name
+        run: |
+          game_name=$(echo "${{ matrix.game_folder }}" | sed 's/^\.\///' | sed 's/\//-/g')
+          echo "game_name=$game_name" >> $GITHUB_OUTPUT
+      - name: Build ${{ steps.set-name.outputs.game_name }}
+        run: python -m pygbag --build $GITHUB_WORKSPACE/${{ matrix.game_folder }}/main.py
       - name: Find build directory
         id: find-build
         run: |
@@ -48,11 +51,11 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-artifact@v2
         with:
-          name: ${{ env.GAME_NAME }}-build
+          name: ${{ steps.set-name.outputs.game_name }}-build
           path: ${{ steps.find-build.outputs.build_dir }}
       - name: Deploy to GitHub Pages
         uses: JamesIves/github-pages-deploy-action@4.1.7
         with:
           branch: gh-pages
           folder: ${{ steps.find-build.outputs.build_dir }}
-          target-folder: ${{ env.GAME_NAME }}
+          target-folder: ${{ steps.set-name.outputs.game_name }}
