@@ -40,14 +40,19 @@ jobs:
         run: pip install pygbag
       - name: Build ${{ env.GAME_NAME }}
         run: python -m pygbag --build $GITHUB_WORKSPACE/${{ env.GAME_NAME }}/main.py
+      - name: Find build directory
+        id: find-build
+        run: |
+          build_dir=$(find $GITHUB_WORKSPACE -type d -name "web" | head -n 1)
+          echo "build_dir=$build_dir" >> $GITHUB_OUTPUT
       - name: Upload artifact
         uses: actions/upload-artifact@v2
         with:
           name: ${{ env.GAME_NAME }}-build
-          path: build/web
+          path: ${{ steps.find-build.outputs.build_dir }}
       - name: Deploy to GitHub Pages
         uses: JamesIves/github-pages-deploy-action@4.1.7
         with:
           branch: gh-pages
-          folder: build/web
+          folder: ${{ steps.find-build.outputs.build_dir }}
           target-folder: ${{ env.GAME_NAME }}
