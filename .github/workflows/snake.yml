@@ -25,9 +25,9 @@ jobs:
         run: |
           python -m pip install pygbag
           python -m pygbag --build $GITHUB_WORKSPACE/${{ env.GAME }}/main.py
-      - name: "Deploy to GitHub Pages"
+      - name: "Upload to GitHub pages branch gh-pages"
         uses: JamesIves/github-pages-deploy-action@4.1.7
         with:
-          branch: main
-          folder: ${{ env.GAME }}/build/web
+          branch: gh-pages
+          folder: build/web
           target-folder: ${{ env.GAME }}
