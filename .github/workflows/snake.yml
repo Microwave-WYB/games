@@ -5,13 +5,13 @@ on:
     branches: [main]
     paths:
       - "snake/**"
-      - ".github/workflows/pygbag.yml"
+      - ".github/workflows/snake.yml"
       - "README.md"
   pull_request:
     branches: [main]
     paths:
       - "snake/**"
-      - ".github/workflows/pygbag.yml"
+      - ".github/workflows/snake.yml"
       - "README.md"
   workflow_dispatch:
 
