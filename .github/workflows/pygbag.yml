@@ -1,16 +1,35 @@
-name: Build Snake Game
+name: Build and Deploy Games
 
 on:
   push:
     paths:
-      - "snake/**"
+      - "**/*.py"
+      - ".github/workflows/pygbag.yml"
+    branches:
+      - main
+  pull_request:
   workflow_dispatch:
 
 jobs:
-  build-game:
+  find-games:
     runs-on: ubuntu-latest
+    outputs:
+      game_folders: ${{ steps.find-folders.outputs.folders }}
+    steps:
+      - uses: actions/checkout@v2
+      - id: find-folders
+        run: |
+          folders=$(find . -type f -name "main.py" -printf "%h\n" | jq -R -s -c 'split("\n")[:-1]')
+          echo "folders=$folders" >> $GITHUB_OUTPUT
+
+  build-and-deploy:
+    needs: find-games
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        game_folder: ${{ fromJson(needs.find-games.outputs.game_folders) }}
     env:
-      GAME_NAME: snake
+      GAME_NAME: ${{ matrix.game_folder }}
     steps:
       - uses: actions/checkout@v2
       - name: Set up Python
