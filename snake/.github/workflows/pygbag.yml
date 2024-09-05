@@ -1,0 +1,34 @@
+name: Build Snake Game
+
+on:
+  push:
+    paths:
+      - "snake/**"
+  workflow_dispatch:
+
+jobs:
+  build-game:
+    runs-on: ubuntu-latest
+    env:
+      GAME_NAME: snake
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: "3.x"
+      - name: Install pygbag
+        run: pip install pygbag
+      - name: Build ${{ env.GAME_NAME }}
+        run: python -m pygbag --build $GITHUB_WORKSPACE/${{ env.GAME_NAME }}/main.py
+      - name: Upload artifact
+        uses: actions/upload-artifact@v2
+        with:
+          name: ${{ env.GAME_NAME }}-build
+          path: build/web
+      - name: Deploy to GitHub Pages
+        uses: JamesIves/github-pages-deploy-action@4.1.7
+        with:
+          branch: gh-pages
+          folder: build/web
+          target-folder: ${{ env.GAME_NAME }}
