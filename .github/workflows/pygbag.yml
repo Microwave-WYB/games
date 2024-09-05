@@ -1,61 +1,33 @@
-name: Build and Deploy Games
-
+name: snake
 on:
   push:
+    branches: [main]
     paths:
-      - "**/*.py"
+      - "*.py"
       - ".github/workflows/pygbag.yml"
-    branches:
-      - main
   pull_request:
+    branches: [main]
+    paths:
+      - "*.py"
+      - ".github/workflows/pygbag.yml"
   workflow_dispatch:
 
 jobs:
-  find-games:
+  build-pygbag:
+    env:
+      GAME: snake
+    name: Build for Emscripten pygbag runtime
     runs-on: ubuntu-latest
-    outputs:
-      game_folders: ${{ steps.find-folders.outputs.folders }}
-    steps:
-      - uses: actions/checkout@v2
-      - id: find-folders
-        run: |
-          folders=$(find . -type f -name "main.py" -printf "%h\n" | jq -R -s -c 'split("\n")[:-1]')
-          echo "folders=$folders" >> $GITHUB_OUTPUT
 
-  build-and-deploy:
-    needs: find-games
-    runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        game_folder: ${{ fromJson(needs.find-games.outputs.game_folders) }}
     steps:
       - uses: actions/checkout@v2
-      - name: Set up Python
-        uses: actions/setup-python@v2
-        with:
-          python-version: "3.x"
-      - name: Install pygbag
-        run: pip install pygbag
-      - name: Set game name
-        id: set-name
+      - name: Checkout
         run: |
-          game_name=$(echo "${{ matrix.game_folder }}" | sed 's/^\.\///' | sed 's/\//-/g')
-          echo "game_name=$game_name" >> $GITHUB_OUTPUT
-      - name: Build ${{ steps.set-name.outputs.game_name }}
-        run: python -m pygbag --build $GITHUB_WORKSPACE/${{ matrix.game_folder }}/main.py
-      - name: Find build directory
-        id: find-build
-        run: |
-          build_dir=$(find $GITHUB_WORKSPACE -type d -name "web" | head -n 1)
-          echo "build_dir=$build_dir" >> $GITHUB_OUTPUT
-      - name: Upload artifact
-        uses: actions/upload-artifact@v2
-        with:
-          name: ${{ steps.set-name.outputs.game_name }}-build
-          path: ${{ steps.find-build.outputs.build_dir }}
-      - name: Deploy to GitHub Pages
+          python -m pip install pygbag
+          python -m pygbag --build $GITHUB_WORKSPACE/${{ env.GAME }}/main.py
+      - name: "Upload to GitHub pages branch gh-pages"
         uses: JamesIves/github-pages-deploy-action@4.1.7
         with:
           branch: gh-pages
-          folder: ${{ steps.find-build.outputs.build_dir }}
-          target-folder: ${{ steps.set-name.outputs.game_name }}
+          folder: build/web
+          target-folder: ${{ env.GAME }}
